@@ -1,0 +1,33 @@
+#NEXUS
+BEGIN DATA;
+
+
+DIMENSIONS  NTAX= 5 NCHAR= 258 ;[sdjfksld sdi_$fjs]
+FORMAT DATATYPE=DNA  INTERLEAVE=YES MISSING=? GAP=- ;
+MATRIX 
+ hCoV-19_pangolin_Guangxi_P4L_2017_EPI_ISL_410538_2017          atgtactcattcgtt?cggaagagacaggtacgttaatagttaatagcgtacttctttttcttgctttcgtggtattcttgctagtcacactagccatcc 
+ hCoV-19_pangolin_Guangdong_P2S_2019_EPI_ISL_410544_2019          -----------cgtttcggaagagacaggtacgttaatagttaatagcgtacttctttttcttgctttcgtggtattcttgctagtcacactagccatcc 
+ hCoV-19_pangolin_Guangdong_1_2019_EPI_ISL_410721_2019          atgtactcattcgtttcggaagagacaggtacgttaatagttaatagcgtacttctttttcttgctttcgtggtattcttgctagtcacactagccatcc 
+ hCoV-19_Rousettus_sp_China_Rousettus_spp_Jinghonf          atgtatgaattggtaagtgctgatacgtctgtagttgttgcaaatgttttagcaattattattctgtgtttagttgttgtaatagtagggtgtgcattgt 
+ hCoV-19_bat_China_BF_493I_EF065515_nan          atgtatgaattggtaagtgctgatacgtctgtagttattgcaaacgttctagtagttattattttatgtttagttgttgttattgtgggctgtgcgttgt 
+ hCoV-19_pangolin_Guangxi_P4L_2017_EPI_ISL_410538_2017          ttactgcgcttcgattgtgtgcgtactgctgcaatattgttaacgtgagtttagttaaaccttctttttacgtctactcacgtgttaaaaat-------- 
+ hCoV-19_pangolin_Guangdong_P2S_2019_EPI_ISL_410544_2019          ttactgcgcttcgattgtgtgcgtac--------tmttgttaacgtgagtcttgtgaaaccttctttttacgtttactctcgtgttaaaaat-------- 
+ hCoV-19_pangolin_Guangdong_1_2019_EPI_ISL_410721_2019          ttactgcgcttcgattgtgtgcgtactgctgcaatattgttaacgtgagtcttgtgaaaccttctttttacgtttactctcgtgttaaaaat-------- 
+ hCoV-19_Rousettus_sp_China_Rousettus_spp_Jinghonf          tgctcatcctacaatttatattaggtacttgtggttgcctatttagtgtaatttgcaaacctactattctcgtgtacaacaaatttaaaaacgaatcact 
+ hCoV-19_bat_China_BF_493I_EF065515_nan          tgctcatcctacagtttatactaggtacttgtggttgtttgtttagtataatttgcaaacccaccattttagtatacaacaaatttagaaacgaatcact 
+ hCoV-19_pangolin_Guangxi_P4L_2017_EPI_ISL_410538_2017          -ctgaattcttctaga---gttcct---------gatcttctggtctaa--------- 
+ hCoV-19_pangolin_Guangdong_P2S_2019_EPI_ISL_410544_2019          -ctgaattcttctaga---gttcct---------gatcttctggtctaa--------- 
+ hCoV-19_pangolin_Guangdong_1_2019_EPI_ISL_410721_2019          -ctgaattcttctaga---gttcct---------gatcttctggtctaa--------- 
+ hCoV-19_Rousettus_sp_China_Rousettus_spp_Jinghonf          cttgaacgaacaagaa------------------gagcttttagtttga--------- 
+ hCoV-19_bat_China_BF_493I_EF065515_nan          tttgaacgaacaagaa------------------gagcttttaatttag--------- 
+ ;
+END;
+
+
+begin mrbayes;
+	set autoclose=yes nowarn=yes;
+	outgroup 1 ;
+	mcmc ngen= 1000000  nrun =  1  nchain =  1  samplefreq= 100  ;
+	sumt nrun= 1 burnin =  1000  filename= test.fasta.phy.nex contype=allcompat;
+	quit;
+END;
