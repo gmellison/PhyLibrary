@@ -1,2 +1,2 @@
-## Julia Library PhyLibrary (version 1.0 by Liang Liu)
+## Julia Library for phylogenetic inference (version 1.0)
 ### add the library to github. We will keep updating the library
