@@ -25,7 +25,7 @@ function readDNA(file, format="nexus")
             taxaname[i] = m[i].match
         end
 
-        for i in 1:length(str) 
+        for i in eachindex(str) 
             if i <= ntaxa
                 x = replace(str[i], taxaname[i]=>"")
                 x = replace(x,r" "=>"")
