@@ -76,7 +76,7 @@ function readDNA(file, format="nexus")
             taxaname[i] = m[i].match
         end
 
-        for i in 1:length(str) 
+        for i in eachindex(str) 
             if i <= ntaxa
                 x = replace(str[i], taxaname[i]=>"")
                 x = replace(x,r" "=>"")
@@ -159,7 +159,7 @@ end
 function readTree(str)
     if typeof(str) == Vector{String}
       tree = Tree[]
-      for i in 1:length(str)
+      for i in eachindex(str)
         push!(tree, readAtree(str[i]))
       end
     elseif typeof(str) == String
@@ -171,7 +171,7 @@ function readTree(str)
           tree = readAtree(treestr[1])
         else
           tree = Tree[]
-          for i in 1:length(treestr)
+          for i in eachindex(treestr)
             push!(tree, readAtree(treestr[i]))
           end
         end

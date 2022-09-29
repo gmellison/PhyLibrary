@@ -9,7 +9,7 @@ function findAllPathDistance(tree::Tree)
         disj = get(x[j], "distance", 3)
         d1 = 0.0
         d2 = 0.0
-        for k in 1:length(anci)
+        for k in eachindex(anci)
           index = (anci[k] .== ancj)
           if sum(index) > 0
               d1 = disi[k]
@@ -38,7 +38,7 @@ function findPathDistance(tree::Tree, inode::Int64, jnode::Int64)
     dis1 = get(x1, "distance", 3)
     dis2 = get(x2, "distance", 3)
   
-    for i in 1:length(anc1)
+    for i in eachindex(anc1)
         index = (anc1[i] .== anc2)
         if sum(index) > 0
             d1 = dis1[i]
@@ -105,13 +105,13 @@ function treeAllPartition(tree::Tree)
         candidates = collect(1:(2*tree.ntaxa-1))
         delnode = cat(tree.rootnode,tree.nodes[tree.rootnode].sons[1],dims=1)
         deleteat!(candidates, sort(delnode))
-        for i in 1:length(candidates)
+        for i in eachindex(candidates)
             result[i,:] = treeSinglePartition(tree, candidates[i])
         end
     else
         candidates = collect(1:(2*tree.ntaxa-2))
         deleteat!(candidates, tree.rootnode)
-        for i in 1:length(candidates)
+        for i in eachindex(candidates)
             result[i,:] = treeSinglePartition(tree, candidates[i])
         end
     end
@@ -251,7 +251,7 @@ function treeTripleDistance(tree1::Tree, tree2::Tree)
     triple2 = findAllTriple(tree2)
   
     distance = 0
-    for i in 1:length(triple1)
+    for i in eachindex(triple1)
         if sum(triple1[i] .== triple2) == 0
             distance += 1
         end
@@ -321,7 +321,7 @@ function treeQuartetDistance(tree1::Tree, tree2::Tree)
     quartet2 = findAllQuartet(tree2)
   
     distance = 0
-    for i in 1:length(quartet1)
+    for i in eachindex(quartet1)
         if sum(quartet1[i] .== quartet2) == 0
             distance += 1
         end

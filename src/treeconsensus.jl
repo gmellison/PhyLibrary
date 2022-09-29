@@ -59,7 +59,7 @@ function treeConsensus(multree::Vector{Tree})
 
         brlens = brlens[(ntaxa+1):npartition,:]
         parlens = zeros(length(parstr))
-        for i in 1:length(parstr)
+        for i in eachindex(parstr)
             x = 1:length(str)
             y = fld.(x[parstr[i] .== str] .- 1,2) .+ 1
             parlens[i] = sum(brlens[y])/length(y)
@@ -70,7 +70,7 @@ function treeConsensus(multree::Vector{Tree})
     #find the most frequent partitions of the consensus tree
     ##############################################################
     parmatrix = fill(2,(length(parstr),ntaxa))
-    for i in 1:length(parstr)
+    for i in eachindex(parstr)
         parmatrix[i,:] = parse.(Int64,split(parstr[i],""))
     end
     parmatrix = hcat(parmatrix,reshape(partition,(length(partition),1)))

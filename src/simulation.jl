@@ -57,7 +57,7 @@ function simNucleotide(states::Vector{Char}, tree::Tree, basefreq::Vector{Float6
     traversal=Int64[]
     preorderTraversal(tree.rootnode, tree, traversal)
   
-    for i in 1:length(traversal)
+    for i in eachindex(traversal)
         if traversal[i] == tree.rootnode
             tree.nodes[traversal[i]].label = join(sample(1:nstates, Weights(basefreq), seqlength))
         else
@@ -66,7 +66,7 @@ function simNucleotide(states::Vector{Char}, tree::Tree, basefreq::Vector{Float6
             father = tree.nodes[traversal[i]].father
             seq = parse.(Int64, split(tree.nodes[father].label,""))
             x = collect(1:seqlength)
-            for j in 1:length(seq)
+            for j in eachindex(seq)
                 x[j] = sample(collect(1:nstates), Weights(pmatrix[seq[j],:]),1)[1]
             end
             tree.nodes[traversal[i]].label = join(x)
