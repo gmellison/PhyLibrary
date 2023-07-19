@@ -29,6 +29,53 @@ function submodelGTR_rateMatrix_estimation(data::Vector{String}, states::Vector{
   return result
 end
 
+
+function submodelDiMethyl_rateMatrix_estimation(data::Vector{String}, states::Vector{Char})
+
+  nstates = 3 
+ 
+  if (length(states) != nstates) 
+      println("Problem")
+  end
+
+  basefreq = sequence_base_freq(data, states)
+  doublefreq = sequence_doublet_freq(data, states)
+  doublefreq = reshape(doublefreq, nstates, nstates)
+  doublefreq = (doublefreq + transpose(doublefreq))/2
+
+  pmatrix_hat = zeros(nstates, nstates)
+  for i in 1:nstates 
+    pmatrix_hat[i,:] = doublefreq[i,:]/basefreq[i]
+  end
+
+  eig = eigen(pmatrix_hat)
+  eva = zeros(nstates, nstates)
+  eva[diag(eva)] = log.(eig.values)
+  eve = eig.vectors
+  qt = eve * eva * inv(eve)
+
+  brlens = - transpose(basefreq) * qt[diag(qt)]
+  qmatrix_hat = qt/brlens
+  qmatrix_hat = qmatrix_hat * diag(1 ./ basefreq)
+
+  # set estimates to 0
+  qmatrix_hat[3] = 0
+  qmatrix_hat[7] = 0
+
+  #making the last rate [nstates-1, nstate] = 1.0
+  #qmatrix_hat = qmatrix_hat/qmatrix_hat[nstates-1, nstates]
+
+  # normalize so that b rate = 1
+  a = qmatrix_hat[8] 
+  b = qmatrix_hat[2] 
+
+  rates_hat = [a,b] 
+  result = Dict([("basefreq", basefreq),("rates", abs.(rates_hat)),("brlens",brlens)])
+
+  return result
+end
+
+
 function treeNewtonRaphsonSingleBrlensFull(tree::Tree, inode::Int64, patternfreq::Vector{Int64}, pattern::Vector{String}, modelpara::ModelParameters)
   minimumbrlens = 0.0001
   a1 = tree.nodes[inode].brlens
@@ -143,6 +190,112 @@ function treeMaximumLikelihood(data::SEQdata, states::Vector{Char}, starttree::T
   print("\n\n\n       Julia: Maximum Likelihood Estimation of Phylogenetic Trees\n\n                          Liang Liu\n\n")
   println("       The initial tree:  ", writeTree(starttree,"text",true),"\n")
   modelpara = ModelParameters(states,zeros(2*starttree.ntaxa-2,4),qmatrix,basefreq)
+
+  if likelihood == "full"
+    oldloglike = LoglikelihoodDNA(patternfreq, pattern, starttree, modelpara)
+  else
+    oldloglike = LoglikelihoodDNApairwise(doubletfreq, starttree, modelpara)
+  end
+
+  niteration = 0
+  oldtree = deepcopy(starttree)
+  newtree = deepcopy(starttree)
+  nomove = 0
+
+  while nomove < 20 && niteration < 10000
+      println("       ", niteration,"   ------  ", oldloglike)
+      treeNNI(newtree)
+      if likelihood == "full"
+        newloglike = LoglikelihoodDNA(patternfreq, pattern, newtree, modelpara)
+      else
+        newloglike = LoglikelihoodDNApairwise(doubletfreq, newtree, modelpara)
+      end
+      #newloglike = LoglikelihoodDNA(patternfreq, pattern, newtree, modelpara)
+      #@time newloglike = LoglikelihoodDNApairwise(doubletfreq, newtree, qmatrix, basefreq)
+      if newloglike > oldloglike
+          oldtree = deepcopy(newtree)
+          oldloglike = newloglike
+          nomove = 0
+      else
+          newtree = deepcopy(oldtree)
+          nomove += 1
+      end
+      niteration += 1
+
+      if mod(niteration, 100) == 0
+        println("\n\n       Updating the branch length ...")
+        @time for i in 1:(2*newtree.ntaxa-2)
+          x = newtree.nodes[i].brlens
+          if x >= 0.0
+            if likelihood == "full"
+              treeNewtonRaphsonSingleBrlensFull(newtree, i, patternfreq, pattern, modelpara)
+            else
+              treeNewtonRaphsonSingleBrlensPairwise(newtree, i, doubletfreq, modelpara)
+            end
+          end
+        end
+      end
+  end
+
+  println("\n\n       Finalize branch length estimation")
+  for i in 1:(2*newtree.ntaxa-2)
+    println("       Updating the branch length ", i)
+    x = newtree.nodes[i].brlens
+    if x >= 0.0
+      if likelihood == "full"
+        treeNewtonRaphsonSingleBrlensFull(newtree, i, patternfreq, pattern, modelpara)
+      else
+        treeNewtonRaphsonSingleBrlensPairwise(newtree, i, doubletfreq, modelpara)
+      end
+    end
+  end
+
+  if likelihood == "full"
+    maxloglike = LoglikelihoodDNA(patternfreq, pattern, newtree, modelpara)
+  else
+    maxloglike = LoglikelihoodDNApairwise(doubletfreq, newtree, modelpara)
+  end
+
+  println("\n       The maximum loglikelihood score: ", maxloglike)
+  println("\n       The final tree:", writeTree(newtree,"text",true))
+
+  return newtree, maxloglike
+
+end
+
+  
+   
+function treeMaximumLikelihood2(data::SEQdata, states::Vector{Char}, starttree::Tree, submodel="GTR", 
+        likelihood="full") 
+  pattern_freq = alignmentPattern(data.sequence)
+  pattern = names(pattern_freq)[1]
+  patternfreq = Vector(pattern_freq)
+
+  doublet = sequence_doublet_freq_pair(data,states)
+  doubletfreq = doublet["doubletfreq"]
+ 
+  if submodel == "GTR"
+      rate_estimates = submodelGTR_rateMatrix_estimation(data.sequence, states)
+  elseif submodel == "DiMethyl"
+      rate_estimates = submodelDiMethyl_rateMatrix_estimation(data.sequence, states)
+  end
+
+  rates = rate_estimates["rates"]
+  basefreq = rate_estimates["basefreq"] 
+  basefreq[length(states)] = 1.0 - sum(basefreq[1:(length(states)-1)])
+  println("The base frequencies: ", basefreq, "\nThe sum is ", sum(basefreq))
+ 
+  if submodel == "GTR"
+      qmatrix = submodelGTR_rateMatrix(basefreq, rates)
+  elseif submodel == "DiMethyl"
+      qmatrix = submodelDiMethyl_rateMatrix(rates[1],rates[2])
+  end
+
+  #starttree = treeGenerator(data.taxaname,"")
+  print("\n\n\n       Julia: Maximum Likelihood Estimation of Phylogenetic Trees\n\n                          Liang Liu\n\n")
+  println("       The initial tree:  ", writeTree(starttree,"text",true),"\n")
+  # should the 2nd entry in zeros be nstates (was 4)?
+  modelpara = ModelParameters(states,zeros(2*starttree.ntaxa-2,length(states)),qmatrix,basefreq)
 
   if likelihood == "full"
     oldloglike = LoglikelihoodDNA(patternfreq, pattern, starttree, modelpara)

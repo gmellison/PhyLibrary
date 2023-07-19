@@ -18,10 +18,12 @@ module PhyLibrary
 
         #estimation
         submodelGTR_rateMatrix_estimation,
+        submodelDiMethyl_rateMatrix_estimation,
         treeNewtonRaphsonSingleBrlensFull,
         treeNewtonRaphsonSingleBrlensPairwise,
         treeNewtonRaphsonBrlens,
         treeMaximumLikelihood,
+        treeMaximumLikelihood2,
 
         #likelihood
         preorderTraversal,
@@ -51,9 +53,13 @@ module PhyLibrary
         #simulation
         simNucleotideSingleBranch,
         simNucleotide,
+        simDiMethylSingleBranch,
+        simDiMethyl,
 
         #substitution models
         submodelGTR_rateMatrix,
+        submodelDiMethyl_rateMatrix,
+        submodelDiMethyl_basefreq,
 
         #tree consensus
         treeConsensus,
