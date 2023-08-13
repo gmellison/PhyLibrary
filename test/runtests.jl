@@ -212,6 +212,19 @@ for i in 1:20
     log2[i] = LoglikelihoodDNApairwise(doubletfreq, tree, modelpara)
 end
 
+
+
+####################################################################################
+## simulate and calculate ML for DiMethyl model
+####################################################################################
+
+states = ['1','2','3']
+treestr = "((((S1:0.01,S4:0.1):0.1,S3:0.21):0.09,S2:0.1):0.1,S5:0.09,S6:0.2);"
+tree = readTree(treestr)
+data = simDiMethyl(states, tree, 1.0, 2.0, 1000)
+treeMaximumLikelihood2(data, states, treeGenerator(data.taxaname,""),"DiMethyl")
+
+
 #########################################################################
 # estimation brlens
 #########################################################################
